@@ -31,7 +31,8 @@ function LoginPage() {
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email, password,
+          email,
+          password,
           options: { emailRedirectTo: `${window.location.origin}/admin` },
         });
         if (error) throw error;
@@ -58,41 +59,76 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Toaster richColors position="top-center" />
       <div className="w-full max-w-md bg-card rounded-2xl shadow-lg p-8">
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">← На сайт</Link>
+        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
+          ← На сайт
+        </Link>
         <h1 className="text-2xl font-bold mt-4">
-          {mode === "signin" ? "Вход в админ-панель" : mode === "signup" ? "Создать аккаунт" : "Восстановление пароля"}
+          {mode === "signin"
+            ? "Вход в админ-панель"
+            : mode === "signup"
+              ? "Создать аккаунт"
+              : "Восстановление пароля"}
         </h1>
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" required value={email} onChange={e => setEmail(e.target.value)} />
+            <Input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           {mode !== "forgot" && (
             <div>
               <Label htmlFor="password">Пароль</Label>
-              <Input id="password" type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} />
+              <Input
+                id="password"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
           )}
           <Button type="submit" className="w-full" disabled={busy}>
-            {busy ? "..." : mode === "signin" ? "Войти" : mode === "signup" ? "Зарегистрироваться" : "Отправить ссылку"}
+            {busy
+              ? "..."
+              : mode === "signin"
+                ? "Войти"
+                : mode === "signup"
+                  ? "Зарегистрироваться"
+                  : "Отправить ссылку"}
           </Button>
         </form>
         <div className="mt-4 flex flex-col gap-2 text-sm text-center text-muted-foreground">
           {mode === "signin" && (
             <>
-              <button onClick={() => setMode("forgot")} className="hover:text-foreground">Забыли пароль?</button>
-              <button onClick={() => setMode("signup")} className="hover:text-foreground">Нет аккаунта? Создать</button>
+              <button onClick={() => setMode("forgot")} className="hover:text-foreground">
+                Забыли пароль?
+              </button>
+              <button onClick={() => setMode("signup")} className="hover:text-foreground">
+                Нет аккаунта? Создать
+              </button>
             </>
           )}
           {mode === "signup" && (
-            <button onClick={() => setMode("signin")} className="hover:text-foreground">Уже есть аккаунт? Войти</button>
+            <button onClick={() => setMode("signin")} className="hover:text-foreground">
+              Уже есть аккаунт? Войти
+            </button>
           )}
           {mode === "forgot" && (
-            <button onClick={() => setMode("signin")} className="hover:text-foreground">← Назад ко входу</button>
+            <button onClick={() => setMode("signin")} className="hover:text-foreground">
+              ← Назад ко входу
+            </button>
           )}
         </div>
         {user && !isAdmin && (
-          <p className="mt-4 text-sm text-destructive text-center">У вашего аккаунта нет прав администратора.</p>
+          <p className="mt-4 text-sm text-destructive text-center">
+            У вашего аккаунта нет прав администратора.
+          </p>
         )}
       </div>
     </div>
