@@ -1,10 +1,8 @@
 # Deployment Guide
 
-This project is built using [TanStack Start](https://tanstack.com/start) and packaged with [Nitro](https://nitro.unjs.io/) via the Lovable configuration.
+This project is configured to build as a **Single Page Application (SPA)** using Vite and TanStack Start.
 
-Because TanStack Start relies on **Server-Side Rendering (SSR)** and API routing, it is **not** a standard static Single Page Application (SPA). As a result, you should **not** use static SPA redirect configurations (like `/* /index.html 200` in `netlify.toml` or rewrites in `vercel.json`), as they will break the serverless functions by bypassing the Nitro server.
-
-Instead, use Nitro presets to generate the correct outputs for your hosting provider.
+Because we have disabled the Nitro SSR engine (`nitro: false` in `vite.config.ts`), the application outputs purely static files. All routing is handled on the client side.
 
 ## Setup
 
@@ -13,38 +11,49 @@ First, install dependencies:
 npm install
 ```
 
+## How to Build
+
+Run the standard build command:
+```sh
+npm run build
+```
+
+This will generate the static files in the `dist/client` directory.
+
 ## Hosting Options
 
-### 1. Vercel (Recommended)
+To prevent 404 errors when a user refreshes a page on a specific route (e.g., `/about`), the hosting provider must redirect all unknown routes to `index.html`. We have pre-configured this for standard static hosts.
 
-Vercel provides native support for Nitro SSR.
+### 1. Vercel
 
-1. Ensure your Vercel project environment settings are using Node.js 20.x or higher.
-2. Under "Environment Variables", set the following:
-   - `NITRO_PRESET` = `vercel`
-3. Push to your repository. Nitro will automatically bundle the serverless functions into `.vercel/output/functions` and the static assets into `.vercel/output/static`. Vercel understands this structure natively.
+The project includes a `vercel.json` file.
 
-Alternatively, running `NITRO_PRESET=vercel npm run build` locally will create the deployment bundle for Vercel.
+1. Push your code to GitHub and connect it to Vercel.
+2. Vercel will automatically detect the Vite project.
+3. Ensure the **Output Directory** is set to `dist/client`.
+4. The `vercel.json` automatically rewrites all traffic to `/index.html`, fixing any 404s.
 
 ### 2. Netlify
 
-Netlify also provides strong support for Nitro SSR functions.
+The project includes a `public/_redirects` file (`/* /index.html 200`).
 
-1. In your Netlify project settings, set the Environment Variable:
-   - `NITRO_PRESET` = `netlify`
-2. Push to deploy. Nitro will create `.netlify/functions-internal` and the appropriate static asset routes automatically.
+1. Connect your repository to Netlify.
+2. Build command: `npm run build`
+3. Publish directory: `dist/client`
+4. Netlify will automatically apply the `_redirects` file (which is copied from `public/` into `dist/client/` during build) to fix SPA routing.
 
-Do not use a `netlify.toml` with `/* /index.html 200` as this will break API routes and SSR. The `netlify` preset handles routing appropriately.
+### 3. GitHub Pages
 
-### 3. GitHub Pages (Static Mode)
+GitHub Pages does not support native SPA rewrites via files like `_redirects`.
 
-GitHub Pages only supports static hosting. If you must deploy to GitHub Pages, you can use the static preset. However, note that true SSR and API features will not function correctly on a static host.
-
-1. Set the following environment variables during your GitHub Actions build step:
-   - `NITRO_PRESET` = `github-pages`
-   - `VITE_BASE_PATH` = `/your-repo-name/` (This sets the `base` in Vite, fixing 404s for assets on sub-paths)
-2. Your build command should look like:
-   ```sh
-   VITE_BASE_PATH=/my-repo/ NITRO_PRESET=github-pages npm run build
+To host on GitHub Pages:
+1. When configuring your Vite build, you must set the base path in `vite.config.ts` if your repository is not a root domain:
+   ```ts
+   // vite.config.ts
+   export default defineConfig({
+     vite: {
+       base: "/your-repo-name/",
+     }
+   })
    ```
-3. Nitro will output the static assets into `.output/public`. Configure your GitHub Pages deployment to serve from this directory (or copy it to the root/`docs` folder if your action requires it).
+2. A common workaround for the 404 issue on GitHub Pages is to duplicate `index.html` as `404.html` in your `public/` directory, or use a script like `spa-github-pages`.

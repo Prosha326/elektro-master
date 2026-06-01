@@ -6,10 +6,5 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  nitro: {
-    preset: process.env.NITRO_PRESET || "vercel",
-  },
-  vite: {
-    base: process.env.VITE_BASE_PATH || "/",
-  },
+  nitro: false,
 });
