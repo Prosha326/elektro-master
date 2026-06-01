@@ -16,7 +16,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const { user, isAdmin, loading } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -36,6 +36,12 @@ function LoginPage() {
         });
         if (error) throw error;
         toast.success("Аккаунт создан. Попросите администратора назначить роль.");
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Письмо для восстановления отправлено");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -53,24 +59,38 @@ function LoginPage() {
       <Toaster richColors position="top-center" />
       <div className="w-full max-w-md bg-card rounded-2xl shadow-lg p-8">
         <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">← На сайт</Link>
-        <h1 className="text-2xl font-bold mt-4">{mode === "signin" ? "Вход в админ-панель" : "Создать аккаунт"}</h1>
+        <h1 className="text-2xl font-bold mt-4">
+          {mode === "signin" ? "Вход в админ-панель" : mode === "signup" ? "Создать аккаунт" : "Восстановление пароля"}
+        </h1>
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
-          <div>
-            <Label htmlFor="password">Пароль</Label>
-            <Input id="password" type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} />
-          </div>
+          {mode !== "forgot" && (
+            <div>
+              <Label htmlFor="password">Пароль</Label>
+              <Input id="password" type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} />
+            </div>
+          )}
           <Button type="submit" className="w-full" disabled={busy}>
-            {busy ? "..." : mode === "signin" ? "Войти" : "Зарегистрироваться"}
+            {busy ? "..." : mode === "signin" ? "Войти" : mode === "signup" ? "Зарегистрироваться" : "Отправить ссылку"}
           </Button>
         </form>
-        <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-                className="mt-4 text-sm text-muted-foreground hover:text-foreground w-full text-center">
-          {mode === "signin" ? "Нет аккаунта? Создать" : "Уже есть аккаунт? Войти"}
-        </button>
+        <div className="mt-4 flex flex-col gap-2 text-sm text-center text-muted-foreground">
+          {mode === "signin" && (
+            <>
+              <button onClick={() => setMode("forgot")} className="hover:text-foreground">Забыли пароль?</button>
+              <button onClick={() => setMode("signup")} className="hover:text-foreground">Нет аккаунта? Создать</button>
+            </>
+          )}
+          {mode === "signup" && (
+            <button onClick={() => setMode("signin")} className="hover:text-foreground">Уже есть аккаунт? Войти</button>
+          )}
+          {mode === "forgot" && (
+            <button onClick={() => setMode("signin")} className="hover:text-foreground">← Назад ко входу</button>
+          )}
+        </div>
         {user && !isAdmin && (
           <p className="mt-4 text-sm text-destructive text-center">У вашего аккаунта нет прав администратора.</p>
         )}
