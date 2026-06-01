@@ -8,7 +8,9 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Восстановление пароля" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Восстановление пароля" }, { name: "robots", content: "noindex" }],
+  }),
   component: ResetPage,
 });
 
@@ -20,10 +22,14 @@ function ResetPage() {
 
   useEffect(() => {
     // Supabase auto-handles the hash; wait for session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
-    supabase.auth.getSession().then(({ data }) => { if (data.session) setReady(true); });
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setReady(true);
+    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -46,17 +52,30 @@ function ResetPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Toaster richColors position="top-center" />
       <div className="w-full max-w-md bg-card rounded-2xl shadow-lg p-8">
-        <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">← Ко входу</Link>
+        <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
+          ← Ко входу
+        </Link>
         <h1 className="text-2xl font-bold mt-4">Новый пароль</h1>
         {!ready ? (
-          <p className="mt-6 text-muted-foreground text-sm">Проверьте ссылку из письма. Если вы открыли её — подождите...</p>
+          <p className="mt-6 text-muted-foreground text-sm">
+            Проверьте ссылку из письма. Если вы открыли её — подождите...
+          </p>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
               <Label htmlFor="password">Новый пароль</Label>
-              <Input id="password" type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} />
+              <Input
+                id="password"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <Button type="submit" className="w-full" disabled={busy}>{busy ? "..." : "Сохранить"}</Button>
+            <Button type="submit" className="w-full" disabled={busy}>
+              {busy ? "..." : "Сохранить"}
+            </Button>
           </form>
         )}
       </div>
