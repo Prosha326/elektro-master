@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Pencil, Trash2, Plus, ArrowUp, ArrowDown } from "lucide-react";
+import { logAudit } from "@/lib/audit";
 
 export type FieldDef = {
   key: string;
@@ -48,10 +49,12 @@ export function CrudManager({ table, title, fields }: Props) {
         const { id, created_at, updated_at, ...rest } = row;
         const { error } = await (supabase.from(table) as any).update(rest).eq("id", id);
         if (error) throw error;
+        await logAudit("update", table, id, { title: rest.title ?? rest[fields[0].key] });
       } else {
         const maxOrder = Math.max(0, ...rows.map(r => r.sort_order ?? 0));
-        const { error } = await (supabase.from(table) as any).insert({ ...row, sort_order: maxOrder + 1 });
+        const { data, error } = await (supabase.from(table) as any).insert({ ...row, sort_order: maxOrder + 1 }).select().single();
         if (error) throw error;
+        await logAudit("create", table, data?.id, { title: row[fields[0].key as keyof typeof row] });
       }
     },
     onSuccess: () => { toast.success("Сохранено"); setOpen(false); invalidate(); },
@@ -61,8 +64,10 @@ export function CrudManager({ table, title, fields }: Props) {
 
   const delMut = useMutation({
     mutationFn: async (id: string) => {
+      const row = rows.find(r => r.id === id);
       const { error } = await supabase.from(table).delete().eq("id", id);
       if (error) throw error;
+      await logAudit("delete", table, id, { title: row?.[fields[0].key] });
     },
     onSuccess: () => { toast.success("Удалено"); invalidate(); },
     onError: e => toast.error(e instanceof Error ? e.message : "Ошибка"),
@@ -76,6 +81,7 @@ export function CrudManager({ table, title, fields }: Props) {
       const a = rows[idx];
       await (supabase.from(table) as any).update({ sort_order: swap.sort_order }).eq("id", a.id);
       await (supabase.from(table) as any).update({ sort_order: a.sort_order }).eq("id", swap.id);
+      await logAudit("reorder", table, id, { direction: dir === -1 ? "up" : "down" });
     },
     onSuccess: invalidate,
   });
@@ -84,6 +90,7 @@ export function CrudManager({ table, title, fields }: Props) {
     mutationFn: async (r: Row) => {
       const { error } = await (supabase.from(table) as any).update({ is_active: !r.is_active }).eq("id", r.id);
       if (error) throw error;
+      await logAudit("toggle_active", table, r.id, { title: r[fields[0].key], is_active: !r.is_active });
     },
     onSuccess: invalidate,
   });

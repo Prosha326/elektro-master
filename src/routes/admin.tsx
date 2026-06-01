@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
-import { LogOut, Briefcase, Building2, Tag, Home } from "lucide-react";
+import { LogOut, Briefcase, Building2, Tag, Home, Users, ScrollText } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Админ-панель" }, { name: "robots", content: "noindex" }] }),
@@ -28,6 +28,8 @@ function AdminLayout() {
     { to: "/admin/services", label: "Услуги", icon: Briefcase },
     { to: "/admin/cases", label: "Объекты", icon: Building2 },
     { to: "/admin/prices", label: "Цены", icon: Tag },
+    { to: "/admin/users", label: "Пользователи", icon: Users },
+    { to: "/admin/logs", label: "Журнал", icon: ScrollText },
   ];
 
   return (
