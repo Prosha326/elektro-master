@@ -46,17 +46,18 @@ export function CrudManager({ table, title, fields }: Props) {
     mutationFn: async (row: Partial<Row>) => {
       if (row.id) {
         const { id, created_at, updated_at, ...rest } = row;
-        const { error } = await supabase.from(table).update(rest).eq("id", id);
+        const { error } = await (supabase.from(table) as any).update(rest).eq("id", id);
         if (error) throw error;
       } else {
         const maxOrder = Math.max(0, ...rows.map(r => r.sort_order ?? 0));
-        const { error } = await supabase.from(table).insert({ ...row, sort_order: maxOrder + 1 } as any);
+        const { error } = await (supabase.from(table) as any).insert({ ...row, sort_order: maxOrder + 1 });
         if (error) throw error;
       }
     },
     onSuccess: () => { toast.success("Сохранено"); setOpen(false); invalidate(); },
     onError: e => toast.error(e instanceof Error ? e.message : "Ошибка"),
   });
+
 
   const delMut = useMutation({
     mutationFn: async (id: string) => {
@@ -73,19 +74,20 @@ export function CrudManager({ table, title, fields }: Props) {
       const swap = rows[idx + dir];
       if (!swap) return;
       const a = rows[idx];
-      await supabase.from(table).update({ sort_order: swap.sort_order }).eq("id", a.id);
-      await supabase.from(table).update({ sort_order: a.sort_order }).eq("id", swap.id);
+      await (supabase.from(table) as any).update({ sort_order: swap.sort_order }).eq("id", a.id);
+      await (supabase.from(table) as any).update({ sort_order: a.sort_order }).eq("id", swap.id);
     },
     onSuccess: invalidate,
   });
 
   const toggleActive = useMutation({
     mutationFn: async (r: Row) => {
-      const { error } = await supabase.from(table).update({ is_active: !r.is_active }).eq("id", r.id);
+      const { error } = await (supabase.from(table) as any).update({ is_active: !r.is_active }).eq("id", r.id);
       if (error) throw error;
     },
     onSuccess: invalidate,
   });
+
 
   const openNew = () => {
     const init: any = { is_active: true };
