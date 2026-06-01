@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export async function logAudit(action: string, entity: string, entity_id?: string, details: Record<string, unknown> = {}) {
+export async function logAudit(action: string, entity: string, entity_id?: string, details: any = {}) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
